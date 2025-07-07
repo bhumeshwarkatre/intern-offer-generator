@@ -2,5 +2,3 @@ streamlit
 qrcode
 docxtpl
 python-docx
-pywin32
-docx2pdf
