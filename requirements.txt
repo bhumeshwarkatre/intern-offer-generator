@@ -1,5 +1,5 @@
 streamlit
-qrcode
 docxtpl
 python-docx
-pillow
+qrcode
+pypandoc
