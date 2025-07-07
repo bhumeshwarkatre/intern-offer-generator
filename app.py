@@ -15,7 +15,7 @@ from email.mime.base import MIMEBase
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email import encoders
-from docx2pdf import convert
+import subprocess
 
 # --- Config ---
 st.set_page_config("Intern Offer Generator", layout="wide")
@@ -44,16 +44,12 @@ st.markdown("""
         border-radius: 8px;
         font-weight: 600;
     }
-    /*  Hide the fullscreen button on images */
     button[title="View fullscreen"] {
         visibility: hidden !important;
     }
-    /* Hide image overlay control entirely */
     .element-container:has(button[title="View fullscreen"]) {
         position: relative;
     }   
-         
-    
 </style>
 """, unsafe_allow_html=True)
 
@@ -96,7 +92,7 @@ def send_email(receiver, pdf_path, data):
     msg = MIMEMultipart()
     msg['From'] = EMAIL
     msg['To'] = receiver
-    msg['Subject'] = f"🎉 Your Internship Offer - {data['intern_name']}"
+    msg['Subject'] = f"\U0001F389 Your Internship Offer - {data['intern_name']}"
 
     html = f"""
     <html><body>
@@ -125,6 +121,15 @@ def send_email(receiver, pdf_path, data):
         server.login(EMAIL, PASSWORD)
         server.send_message(msg)
 
+def convert_to_pdf_libreoffice(docx_path):
+    output_dir = os.path.dirname(docx_path)
+    try:
+        subprocess.run(["libreoffice", "--headless", "--convert-to", "pdf", "--outdir", output_dir, docx_path], check=True)
+        return os.path.splitext(docx_path)[0] + ".pdf"
+    except Exception as e:
+        st.warning(f"PDF conversion failed: {e}")
+        return docx_path
+
 # --- Form Layout ---
 with st.form("offer_form"):
     col1, col2, col3 = st.columns(3)
@@ -143,7 +148,7 @@ with st.form("offer_form"):
     with col6:
         offer_date = st.date_input("Offer Date", value=date.today())
 
-    submit = st.form_submit_button("🚀 Generate & Send Offer Letter")
+    submit = st.form_submit_button("\U0001F680 Generate & Send Offer Letter")
 
 # --- On Submit ---
 if submit:
@@ -178,20 +183,9 @@ if submit:
             st.warning("⚠️ QR insertion failed.")
 
         docx_path = os.path.join(tempfile.gettempdir(), f"Offer_{intern_name}.docx")
-        pdf_path = os.path.join(tempfile.gettempdir(), f"Offer_{intern_name}.pdf")
         doc.save(docx_path)
 
-        if platform.system() == "Windows":
-            try:
-                from pythoncom import CoInitialize, CoUninitialize
-                CoInitialize()
-                convert(docx_path, pdf_path)
-                CoUninitialize()
-            except:
-                st.warning("⚠️ PDF conversion failed. Using DOCX.")
-                pdf_path = docx_path
-        else:
-            pdf_path = docx_path
+        pdf_path = convert_to_pdf_libreoffice(docx_path)
 
         try:
             send_email(email, pdf_path, data)
