@@ -1,0 +1,21 @@
+# Secrets & runtime files
+.streamlit/secrets.toml
+intern_offers.csv
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Virtual environment
+env/
+venv/
+.venv/
+
+# Generated files
+*.pdf
+*.docx
+
+# OS or editor-specific
+.DS_Store
+Thumbs.db
+*.swp
