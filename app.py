@@ -15,7 +15,7 @@ from email.mime.base import MIMEBase
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email import encoders
-import pypandoc
+import subprocess
 
 # --- Config ---
 st.set_page_config("Intern Offer Generator", layout="wide")
@@ -36,9 +36,6 @@ st.markdown("""
     .title-text {
         font-size: 2rem;
         font-weight: 700;
-        padding: 0.5rem 1rem;
-        border-radius: 12px;
-        background-color: #f2f2f2;
     }
     .stButton>button {
         background-color: #1E88E5;
@@ -52,7 +49,7 @@ st.markdown("""
     }
     .element-container:has(button[title="View fullscreen"]) {
         position: relative;
-    }
+    }   
 </style>
 """, unsafe_allow_html=True)
 
@@ -95,7 +92,7 @@ def send_email(receiver, pdf_path, data):
     msg = MIMEMultipart()
     msg['From'] = EMAIL
     msg['To'] = receiver
-    msg['Subject'] = f"🎉 Your Internship Offer - {data['intern_name']}"
+    msg['Subject'] = f"\U0001F389 Your Internship Offer - {data['intern_name']}"
 
     html = f"""
     <html><body>
@@ -124,13 +121,13 @@ def send_email(receiver, pdf_path, data):
         server.login(EMAIL, PASSWORD)
         server.send_message(msg)
 
-def convert_to_pdf_pandoc(docx_path):
-    pdf_path = os.path.splitext(docx_path)[0] + ".pdf"
+def convert_to_pdf_libreoffice(docx_path):
+    output_dir = os.path.dirname(docx_path)
     try:
-        pypandoc.convert_file(docx_path, 'pdf', outputfile=pdf_path)
-        return pdf_path
+        subprocess.run(["libreoffice", "--headless", "--convert-to", "pdf", "--outdir", output_dir, docx_path], check=True)
+        return os.path.splitext(docx_path)[0] + ".pdf"
     except Exception as e:
-        st.warning(f"⚠️ PDF conversion failed using Pandoc: {e}")
+        st.warning(f"PDF conversion failed: {e}")
         return docx_path
 
 # --- Form Layout ---
@@ -151,7 +148,7 @@ with st.form("offer_form"):
     with col6:
         offer_date = st.date_input("Offer Date", value=date.today())
 
-    submit = st.form_submit_button("🚀 Generate & Send Offer Letter")
+    submit = st.form_submit_button("\U0001F680 Generate & Send Offer Letter")
 
 # --- On Submit ---
 if submit:
@@ -188,7 +185,7 @@ if submit:
         docx_path = os.path.join(tempfile.gettempdir(), f"Offer_{intern_name}.docx")
         doc.save(docx_path)
 
-        pdf_path = convert_to_pdf_pandoc(docx_path)
+        pdf_path = convert_to_pdf_libreoffice(docx_path)
 
         try:
             send_email(email, pdf_path, data)
