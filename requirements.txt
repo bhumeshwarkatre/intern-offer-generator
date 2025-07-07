@@ -1,11 +1,6 @@
-
-qrcode 
-docxtpl 
-python-docx 
-fpdf 
-reportlab 
-pywin32 
-numpy
-pandas
-docx2pdf
 streamlit
+qrcode
+docxtpl
+python-docx
+pywin32
+docx2pdf
