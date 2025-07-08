@@ -15,3 +15,10 @@ qrcode
 reportlab
 pdf2image
 Pillow
+docxtpl
+python-docx
+mammoth
+imgkit
+reportlab
+qrcode
+Pillow
