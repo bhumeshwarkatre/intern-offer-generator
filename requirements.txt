@@ -9,3 +9,9 @@ pandas
 streamlit
 pdfkit
 jinja2 
+docxtpl
+python-docx
+qrcode
+reportlab
+pdf2image
+Pillow
