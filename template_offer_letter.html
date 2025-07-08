@@ -1,104 +1,116 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="utf-8">
-    <title>Internship Offer Letter</title>
-    <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            margin: 40px;
-            color: #000;
-            line-height: 1.6;
-        }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .logo {
-            max-height: 80px;
-        }
-        .qr {
-            max-width: 100px;
-        }
-        .title {
-            text-align: center;
-            font-size: 22px;
-            font-weight: bold;
-            margin: 30px 0 20px;
-            text-decoration: underline;
-        }
-        .section {
-            margin-bottom: 20px;
-        }
-        .signature {
-            margin-top: 60px;
-        }
-        .footer {
-            margin-top: 30px;
-            font-size: 13px;
-        }
-        .footer div {
-            margin-bottom: 4px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Internship Offer Letter</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 60px 50px;
+      font-size: 14px;
+      line-height: 1.8;
+      color: #000;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .logo {
+      height: 70px;
+    }
+    .qr {
+      height: 100px;
+    }
+    .title {
+      text-align: center;
+      font-size: 20px;
+      font-weight: bold;
+      margin: 30px 0 10px;
+      text-decoration: underline;
+    }
+    .section {
+      margin: 20px 0;
+    }
+    .signature {
+      margin-top: 60px;
+      white-space: pre-line;
+    }
+    .footer {
+      margin-top: 50px;
+      font-size: 13px;
+      display: flex;
+      justify-content: space-between;
+    }
+  </style>
 </head>
 <body>
 
-    <div class="header">
-        <img src="logo.png" alt="Logo" class="logo">
-        <img src="{{ qr_path }}" alt="QR Code" class="qr">
-    </div>
+  <div class="header">
+    <img src="logo.png" class="logo" alt="Logo">
+    <img src="{{ qr_path }}" class="qr" alt="QR Code">
+  </div>
 
-    <div class="title">Internship Offer Letter</div>
+  <div class="title">Internship Offer Letter</div>
 
-    <div class="section"><strong>ID:</strong> {{ i_id }}</div>
+  <div class="section">
+    <strong>ID :</strong> {{ i_id }}
+  </div>
 
-    <div class="section">
-        Dear Intern <strong>{{ intern_name }}</strong>,
-        <br><br>
-        We are pleased to offer you an internship at our company in <strong>{{ domain }}</strong> at our <strong>SKYHIGHES TECHNOLOGIES</strong>.
-        Your internship shall commence on <strong>{{ start_date }}</strong> and end on <strong>{{ end_date }}</strong> (“Term”).
-    </div>
+  <div class="section">
+    Dear Intern <strong>{{ intern_name }}</strong>,<br><br>
 
-    <div class="section">
-        The terms and conditions of your internship with the Company are set forth below.
-        <ul>
-            <li>Subject to your acceptance of the terms, your responsibilities will be assigned by your supervisor.</li>
-            <li>You are eligible for projects based on your work.</li>
-            <li>The internship runs Monday to Friday.</li>
-        </ul>
-    </div>
+    We are pleased to offer you an internship at our company in <strong>{{ domain }}</strong> at our <strong>SKYHIGHES TECHNOLOGIES</strong>.
+    Your internship shall commence on <strong>{{ start_date }}</strong> and end on <strong>{{ end_date }}</strong> (“Term”).
+  </div>
 
-    <div class="section">
-        Please bring the following documents on Day 1:
-        <ul>
-            <li>Aadhar Card</li>
-            <li>PAN Card</li>
-            <li>College ID Card</li>
-            <li>Last Year Marksheet</li>
-        </ul>
-    </div>
+  <div class="section">
+    The Terms and conditions of your internship with the Company are set forth below.
+  </div>
 
-    <div class="section">
-        You must sign a confidentiality agreement before the internship starts.
-    </div>
+  <div class="section">
+    Subject to your acceptance of the terms and conditions contained herein, your project and responsibilities during the Term will be determined by the supervisor assigned to you for the duration of the internship.
+  </div>
 
-    <div class="section">
-        The internship is not employment nor a job offer with SKYHIGHES TECHNOLOGIES NAGPUR. Please confirm your acceptance by <strong>{{ offer_date }}</strong>. If not, we reserve the right to cancel.
-    </div>
+  <div class="section">
+    You are eligible for projects depending on your work during the Term, which shall be the completion of the tasks assigned to you during your internship to the satisfaction of the Company.
+  </div>
 
-    <div class="signature">
-        Students, sign<br><br><br>
-        Thank & Regards,<br><br>
-        <strong>(CEO SkyHighes Technologies)</strong>
-    </div>
+  <div class="section">
+    It is an internship from Monday to Friday.<br>
+    Please bring the following documents on your first day:
+    <ul>
+      <li>Aadhar Card</li>
+      <li>PAN Card</li>
+      <li>College ID Card</li>
+      <li>Last Passing Year</li>
+    </ul>
+  </div>
 
-    <div class="footer">
-        <div>📞 9834827356</div>
-        <div>📧 skyhighes22@gmail.com</div>
-        <div>🌐 www.skyhighes.com</div>
-    </div>
+  <div class="section">
+    You will sign a confidentiality agreement with the company before you commence your internship.
+  </div>
+
+  <div class="section">
+    The internship cannot be construed as employment or an offer of employment with <strong>SKYHIGHES TECHNOLOGIES NAGPUR</strong>.<br>
+    Please confirm your acceptance of the terms of this offer by <strong>{{ offer_date }}</strong>. Failing which, we have the right to cancel the internship.
+    We look forward to having you on our team! If you have any questions, feel free to contact us.
+  </div>
+
+  <div class="signature">
+    Students, sign
+
+
+    Thank & Regards,
+
+    (CEO SkyHighes Technologies)
+  </div>
+
+  <div class="footer">
+    <div>📞 9834827356</div>
+    <div>📧 skyhighes22@gmail.com</div>
+    <div>🌐 www.skyhighes.com</div>
+  </div>
 
 </body>
 </html>
