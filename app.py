@@ -1,7 +1,6 @@
 import os
 import re
 import csv
-import pdfkit
 import qrcode
 import random
 import string
@@ -9,6 +8,7 @@ import tempfile
 import streamlit as st
 from datetime import date
 from jinja2 import Template
+from xhtml2pdf import pisa
 from smtplib import SMTP
 from email.mime.base import MIMEBase
 from email.mime.text import MIMEText
@@ -26,20 +26,20 @@ LOGO = "logo.png"
 # --- Style ---
 st.markdown("""
 <style>
-    .title-text {
-        font-size: 2rem;
-        font-weight: 700;
-    }
-    .stButton>button {
-        background-color: #1E88E5;
-        color: white;
-        padding: 0.5rem 1.5rem;
-        border-radius: 8px;
-        font-weight: 600;
-    }
-    button[title="View fullscreen"] {
-        visibility: hidden !important;
-    }
+.title-text {
+    font-size: 2rem;
+    font-weight: 700;
+}
+.stButton>button {
+    background-color: #1E88E5;
+    color: white;
+    padding: 0.5rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+}
+button[title="View fullscreen"] {
+    visibility: hidden !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -54,12 +54,10 @@ with st.container():
 
 st.divider()
 
-# --- Utils ---
-def format_date(d):
-    return d.strftime("%A, %d %B %Y")
+# --- Utility Functions ---
+def format_date(d): return d.strftime("%A, %d %B %Y")
 
-def generate_id():
-    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=9))
+def generate_id(): return ''.join(random.choices(string.ascii_uppercase + string.digits, k=9))
 
 def generate_qr(data):
     qr = qrcode.QRCode(box_size=10, border=4)
@@ -83,12 +81,10 @@ def render_html(data, qr_path):
         template = Template(file.read())
     return template.render(**data, qr_path=qr_path)
 
-def html_to_pdf(html_content, output_path):
-    config = pdfkit.configuration()  # use default if wkhtmltopdf is in PATH
-    options = {
-        'enable-local-file-access': None
-    }
-    pdfkit.from_string(html_content, output_path, configuration=config, options=options)
+def html_to_pdf(html_content, pdf_path):
+    with open(pdf_path, "w+b") as f:
+        pisa_status = pisa.CreatePDF(html_content, dest=f)
+    return pisa_status.err == 0
 
 def send_email(receiver, pdf_path, data):
     msg = MIMEMultipart()
@@ -123,7 +119,7 @@ def send_email(receiver, pdf_path, data):
         server.login(EMAIL, PASSWORD)
         server.send_message(msg)
 
-# --- Form ---
+# --- Form Layout ---
 with st.form("offer_form"):
     col1, col2, col3 = st.columns(3)
     with col1:
@@ -166,17 +162,17 @@ if submit:
         }
 
         save_to_csv(data)
-
-        qr_path = generate_qr(f"{intern_name}, {domain}, {start_date}, {end_date}, {offer_date}, {i_id}")
+        qr_path = generate_qr(f"{intern_name}, {domain}, {data['start_date']}, {data['end_date']}, {data['offer_date']}, {i_id}")
         html_content = render_html(data, qr_path)
 
         pdf_path = os.path.join(tempfile.gettempdir(), f"Offer_{intern_name}.pdf")
-        html_to_pdf(html_content, pdf_path)
-
-        try:
-            send_email(email, pdf_path, data)
-            st.success(f"✅ Sent to {email}")
-            with open(pdf_path, "rb") as f:
-                st.download_button("📥 Download Offer Letter", f, file_name=os.path.basename(pdf_path))
-        except Exception as e:
-            st.error(f"❌ Email failed: {e}")
+        if html_to_pdf(html_content, pdf_path):
+            try:
+                send_email(email, pdf_path, data)
+                st.success(f"✅ Sent to {email}")
+                with open(pdf_path, "rb") as f:
+                    st.download_button("📥 Download Offer Letter", f, file_name=os.path.basename(pdf_path))
+            except Exception as e:
+                st.error(f"❌ Email failed: {e}")
+        else:
+            st.error("❌ PDF generation failed. Check template formatting.")
