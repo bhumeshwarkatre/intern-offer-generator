@@ -5,20 +5,19 @@ import qrcode
 import random
 import string
 import tempfile
-import platform
 import streamlit as st
 from datetime import date
-from smtplib import SMTP
 from docxtpl import DocxTemplate
 from docx.shared import Inches
+from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
-from email.mime.text import MIMEText
 from email import encoders
-from pdf2image import convert_from_path
+from smtplib import SMTP
+import mammoth
+import imgkit
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
-from PIL import Image
 
 # --- Config ---
 st.set_page_config("Intern Offer Generator", layout="wide")
@@ -34,17 +33,16 @@ st.markdown("""
 .title-text { font-size: 2rem; font-weight: 700; }
 .stButton>button { background-color: #1E88E5; color: white; padding: 0.5rem 1.5rem; border-radius: 8px; font-weight: 600; }
 button[title="View fullscreen"] { visibility: hidden !important; }
-.element-container:has(button[title="View fullscreen"]) { position: relative; }
 </style>
 """, unsafe_allow_html=True)
 
-# --- Header Layout ---
+# --- Header ---
 with st.container():
-    col_logo, col_title = st.columns([1, 6])
-    with col_logo:
+    col1, col2 = st.columns([1, 6])
+    with col1:
         if os.path.exists(LOGO):
             st.image(LOGO, width=80)
-    with col_title:
+    with col2:
         st.markdown('<div class="title-text">SkyHighes Technologies Internship Letter Portal</div>', unsafe_allow_html=True)
 
 st.divider()
@@ -52,8 +50,7 @@ st.divider()
 # --- Utility Functions ---
 def format_date(d): return d.strftime("%A, %d %B %Y")
 
-def generate_certificate_key():
-    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=9))
+def generate_certificate_key(): return ''.join(random.choices(string.ascii_uppercase + string.digits, k=9))
 
 def generate_qr(data):
     qr = qrcode.QRCode(box_size=10, border=4)
@@ -71,33 +68,39 @@ def save_to_csv(data):
         if not exists: writer.writerow(data.keys())
         writer.writerow(data.values())
 
-def docx_to_image_pdf(docx_path):
-    temp_pdf = docx_path.replace(".docx", "_intermediate.pdf")
-    os.system(f"libreoffice --headless --convert-to pdf --outdir {tempfile.gettempdir()} {docx_path}")
-    pages = convert_from_path(temp_pdf, dpi=200)
-    final_pdf = docx_path.replace(".docx", ".pdf")
+def convert_docx_to_png_pdf(docx_path):
+    # Convert .docx → HTML
+    with open(docx_path, "rb") as docx_file:
+        result = mammoth.convert_to_html(docx_file)
+        html = result.value
 
+    html_file = docx_path.replace(".docx", ".html")
+    with open(html_file, "w", encoding="utf-8") as f:
+        f.write(html)
+
+    # HTML → PNG using imgkit
+    png_file = docx_path.replace(".docx", ".png")
+    imgkit.from_file(html_file, png_file)
+
+    # PNG → PDF using reportlab
+    final_pdf = docx_path.replace(".docx", ".pdf")
     c = canvas.Canvas(final_pdf, pagesize=A4)
-    for img in pages:
-        img_io = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
-        img.save(img_io.name, 'PNG')
-        width, height = A4
-        c.drawImage(img_io.name, 0, 0, width=width, height=height)
-        c.showPage()
-        os.unlink(img_io.name)
+    c.drawImage(png_file, 0, 0, width=A4[0], height=A4[1])
     c.save()
+
     return final_pdf
 
 def send_email(receiver, pdf_path, data):
     msg = MIMEMultipart()
-    msg['From'] = EMAIL
-    msg['To'] = receiver
-    msg['Subject'] = f"🎉 Your Internship Offer - {data['intern_name']}"
+    msg["From"] = EMAIL
+    msg["To"] = receiver
+    msg["Subject"] = f"🎉 Your Internship Offer - {data['intern_name']}"
 
     html = f"""<p>Dear {data['intern_name']},</p>
-    <p>We're pleased to offer you an internship at <b>SkyHighes Technology</b>.</p>
+    <p>We’re pleased to offer you an internship at <b>SkyHighes Technology</b>.</p>
     <p>Your offer letter is attached.</p>"""
-    msg.attach(MIMEText(html, 'html'))
+
+    msg.attach(MIMEText(html, "html"))
 
     with open(pdf_path, "rb") as f:
         part = MIMEBase("application", "octet-stream")
@@ -150,6 +153,7 @@ if submit:
         save_to_csv(data)
         doc = DocxTemplate(TEMPLATE_FILE)
         doc.render(data)
+
         qr_path = generate_qr(f"{intern_name}, {domain}, {start_date}, {end_date}, {offer_date}, {intern_id}")
         try:
             doc.tables[0].rows[0].cells[2].paragraphs[0].add_run().add_picture(qr_path, width=Inches(1.5))
@@ -159,12 +163,11 @@ if submit:
         docx_path = os.path.join(tempfile.gettempdir(), f"Offer_{intern_name}.docx")
         doc.save(docx_path)
 
-        pdf_path = docx_to_image_pdf(docx_path)
-
         try:
+            pdf_path = convert_docx_to_png_pdf(docx_path)
             send_email(email, pdf_path, data)
             st.success(f"✅ Sent to {email}")
             with open(pdf_path, "rb") as f:
                 st.download_button("📥 Download Offer Letter", f, file_name=os.path.basename(pdf_path))
         except Exception as e:
-            st.error(f"❌ Email failed: {e}")
+            st.error(f"❌ Failed to send: {e}")
